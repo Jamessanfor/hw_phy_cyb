@@ -1,0 +1,149 @@
+#lang ivy1.7
+
+attribute method = mc
+
+# trains and signals
+
+#type trains = {east_train, west_train}
+
+type signal = {green, red}
+
+
+#defin train states
+
+type state = {waiting, inuse, away}
+
+# train
+
+
+
+implementation {
+isolate east_train = {
+      individual state_of : state
+      individual signal_for : signal
+       individual rand_bool :bool
+
+
+after init {
+      state_of := waiting;
+      signal_for := red;
+      rand_bool := *;
+      }
+
+
+
+      action gone = {
+      if  ((state_of = waiting) & (signal_for = green)) {
+      state_of := waiting;
+      state_of := away 
+      }
+      
+      if state_of = away  {
+      rand_bool := *;
+      
+      }
+      if state_of = away & rand_bool  {
+      state_of := away;
+      state_of := waiting;
+      }
+      }
+      
+      action usin = {
+      if state_of = waiting & signal_for = green  {
+      state_of := waiting;
+      state_of := inuse;
+      
+      }
+      if state_of = inuse {
+      rand_bool := *;
+      }
+      if state_of = inuse & rand_bool  {
+      state_of := inuse;
+      state_of := waiting;
+      }
+      }
+      
+}
+
+
+##
+
+isolate west_train = {
+      individual state_of : state
+      individual signal_for : signal
+       individual rand_bool :bool
+
+
+after init {
+      state_of := waiting;
+      signal_for := red;
+      rand_bool := *;
+      }
+
+
+
+      action gone = {
+      if  (state_of = waiting ) & signal_for = green {
+      state_of := waiting;
+      state_of := away ;
+      }
+      
+      if state_of = away  {
+      rand_bool := *;
+      
+      }
+      if state_of = away & rand_bool  {
+      state_of := away;
+      state_of := waiting;
+      }
+      }
+      
+      action usin = {
+      if state_of = waiting & signal_for = green  {
+      state_of := waiting;
+      state_of := inuse;
+      
+      }
+      if state_of = inuse {
+      rand_bool := *;
+      }
+      if state_of = inuse & rand_bool  {
+      state_of := inuse;
+      state_of := waiting;
+      }
+      }
+      
+}
+
+
+
+##
+
+
+
+
+isolate bridge = {
+
+       action fsm = {
+       if east_train.state_of = inuse | west_train.state_of = away {
+       west_train.signal_for := red;
+       east_train.signal_for := green;
+       }
+       if west_train.state_of = inuse | east_train.state_of = away {
+       west_train.signal_for := green;
+       east_train.signal_for := red;
+       }
+       
+
+}
+
+}
+ 
+
+}
+invariant ~( east_train.state_of = inuse &  west_train.state_of = inuse )
+
+
+
+export east_train.gone
+export west_train.gone
